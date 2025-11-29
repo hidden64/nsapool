@@ -3,6 +3,7 @@
   hosts: nsapoold05
   become: yes
   vars:
+    mysql_root_password: "Nm3ZaMg64"  # ← Remplace par ton mot de passe MySQL root
     db_name: "nsapool"
     db_user: "username"
     db_password: "password"
@@ -15,68 +16,42 @@
         update_cache: yes
         cache_valid_time: 3600
 
-    # 2. Installation des dépendances Python pour MySQL
-    - name: Installation de python3-pymysql
-      apt:
-        name: python3-pymysql
-        state: present
-
-    # 3. Vérification que MariaDB est démarré
+    # 2. Vérification que MariaDB est démarré
     - name: S'assurer que MariaDB est démarré
       service:
         name: mariadb
         state: started
         enabled: yes
 
-    # 4. Création de la base de données
-    - name: Création de la base de données nsapool
-      mysql_db:
-        name: "{{ db_name }}"
-        state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-      become_user: root
+    # 3. Configuration MySQL manuelle (via script shell)
+    - name: Création de la base de données et import SQL
+      shell: |
+        mysql -u root -p'{{ mysql_root_password }}' -e "CREATE DATABASE IF NOT EXISTS {{ db_name }};"
+        mysql -u root -p'{{ mysql_root_password }}' -e "CREATE USER IF NOT EXISTS '{{ db_user }}'@'localhost' IDENTIFIED BY '{{ db_password }}';"
+        mysql -u root -p'{{ mysql_root_password }}' -e "GRANT ALL PRIVILEGES ON {{ db_name }}.* TO '{{ db_user }}'@'localhost';"
+        mysql -u root -p'{{ mysql_root_password }}' -e "FLUSH PRIVILEGES;"
+        mysql -u root -p'{{ mysql_root_password }}' {{ db_name }} < {{ playbook_dir }}/student_day05/nsapool.sql
+      args:
+        executable: /bin/bash
+      become: yes
+      ignore_errors: yes
+      no_log: true
 
-    # 5. Création de l'utilisateur MySQL
-    - name: Création de l'utilisateur de base de données
-      mysql_user:
-        name: "{{ db_user }}"
-        password: "{{ db_password }}"
-        priv: "{{ db_name }}.*:ALL"
-        state: present
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-      become_user: root
-
-    # 6. Copie du fichier SQL
-    - name: Copie du fichier nsapool.sql
-      copy:
-        src: student_day05/nsapool.sql
-        dest: /tmp/nsapool.sql
-        mode: '0644'
-
-    # 7. Import de la base de données
-    - name: Import du fichier SQL
-      mysql_db:
-        name: "{{ db_name }}"
-        state: import
-        target: /tmp/nsapool.sql
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-      become_user: root
-
-    # 8. Création du répertoire web si nécessaire
+    # 4. Création du répertoire web si nécessaire
     - name: S'assurer que le répertoire web existe
       file:
         path: "{{ web_root }}"
         state: directory
         mode: '0755'
 
-    # 9. Copie du fichier PHP
+    # 5. Copie du fichier PHP
     - name: Déploiement du fichier data.php
       copy:
         src: student_day05/data.php
         dest: "{{ web_root }}/data.php"
         mode: '0644'
 
-    # 10. Configuration des permissions
+    # 6. Configuration des permissions
     - name: Configuration des permissions du répertoire web
       file:
         path: "{{ web_root }}"
@@ -84,7 +59,7 @@
         group: www-data
         recurse: yes
 
-    # 11. Redémarrage des services
+    # 7. Redémarrage des services
     - name: Redémarrage de PHP-FPM
       service:
         name: php8.2-fpm
