@@ -1,0 +1,94 @@
+---
+- name: Configuration automatique du serveur nsapool
+  hosts: nsapoold05
+  become: yes
+  vars:
+    mysql_root_password: "root_password"  # Change ce mot de passe
+    db_name: "nsapool"
+    db_user: "username"
+    db_password: "password"
+    web_root: "/var/www/html"
+
+  tasks:
+    # 1. Mise à jour du système
+    - name: Mise à jour des paquets APT
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    # 2. Installation des dépendances Python pour MySQL
+    - name: Installation de python3-pymysql
+      apt:
+        name: python3-pymysql
+        state: present
+
+    # 3. Vérification que MariaDB est démarré
+    - name: S'assurer que MariaDB est démarré
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    # 4. Création de la base de données
+    - name: Création de la base de données nsapool
+      mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    # 5. Création de l'utilisateur MySQL
+    - name: Création de l'utilisateur de base de données
+      mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "{{ db_name }}.*:ALL"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    # 6. Copie du fichier SQL
+    - name: Copie du fichier nsapool.sql
+      copy:
+        src: files/nsapool.sql
+        dest: /tmp/nsapool.sql
+        mode: '0644'
+
+    # 7. Import de la base de données
+    - name: Import du fichier SQL
+      mysql_db:
+        name: "{{ db_name }}"
+        state: import
+        target: /tmp/nsapool.sql
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    # 8. Création du répertoire web si nécessaire
+    - name: S'assurer que le répertoire web existe
+      file:
+        path: "{{ web_root }}"
+        state: directory
+        mode: '0755'
+
+    # 9. Copie du fichier PHP avec les bonnes informations
+    - name: Déploiement du fichier data.php
+      template:
+        src: templates/data.php.j2
+        dest: "{{ web_root }}/data.php"
+        mode: '0644'
+
+    # 10. Configuration des permissions
+    - name: Configuration des permissions du répertoire web
+      file:
+        path: "{{ web_root }}"
+        owner: www-data
+        group: www-data
+        recurse: yes
+
+    # 11. Redémarrage des services
+    - name: Redémarrage de PHP-FPM
+      service:
+        name: php8.2-fpm
+        state: restarted
+      ignore_errors: yes
+
+    - name: Message de succès
+      debug:
+        msg: "Installation terminée ! Accédez à http://localhost/data.php pour tester"
