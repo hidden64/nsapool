@@ -1,0 +1,8 @@
+---
+- name: Changer le message de bienvenue (MOTD)
+  ansible.builtin.copy:
+    content: "Welcome to nsapoold05\n"
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: '0644'
