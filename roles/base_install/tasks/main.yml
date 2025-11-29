@@ -1,0 +1,13 @@
+---
+- name: Mettre à jour le cache et installer les paquets de base
+  ansible.builtin.apt:
+    update_cache: yes      # Ceci fait l'équivalent de "apt-get update"
+    state: present         # Ceci dit "je veux qu'ils soient installés"
+    name:
+      - git
+      - htop
+      - curl
+      - sudo
+      - unzip
+      - python3
+      - python3-pip
