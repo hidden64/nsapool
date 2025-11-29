@@ -3,7 +3,6 @@
   hosts: nsapoold05
   become: yes
   vars:
-    mysql_root_password: "root_password"  # Change ce mot de passe
     db_name: "nsapool"
     db_user: "username"
     db_password: "password"
@@ -35,6 +34,7 @@
         name: "{{ db_name }}"
         state: present
         login_unix_socket: /var/run/mysqld/mysqld.sock
+      become_user: root
 
     # 5. Création de l'utilisateur MySQL
     - name: Création de l'utilisateur de base de données
@@ -44,6 +44,7 @@
         priv: "{{ db_name }}.*:ALL"
         state: present
         login_unix_socket: /var/run/mysqld/mysqld.sock
+      become_user: root
 
     # 6. Copie du fichier SQL
     - name: Copie du fichier nsapool.sql
@@ -59,6 +60,7 @@
         state: import
         target: /tmp/nsapool.sql
         login_unix_socket: /var/run/mysqld/mysqld.sock
+      become_user: root
 
     # 8. Création du répertoire web si nécessaire
     - name: S'assurer que le répertoire web existe
