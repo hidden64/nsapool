@@ -1,7 +1,7 @@
 /*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19-11.6.2-MariaDB, for debian-linux-gnu (aarch64)
 --
--- Host: localhost    Database: day04
+-- Host: localhost    Database: nsapool
 -- ------------------------------------------------------
 -- Server version	11.6.2-MariaDB-ubu2404
 
@@ -17,12 +17,12 @@
 /*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 
 --
--- Current Database: `day04`
+-- Current Database: `nsapool`
 --
 
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `day04` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `nsapool` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci */;
 
-USE `day04`;
+USE `nsapool`;
 
 --
 -- Table structure for table `doctrine_migration_versions`
