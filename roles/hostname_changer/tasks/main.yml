@@ -1,0 +1,4 @@
+---
+- name: Changer le nom d'hôte en nsapoold05
+  ansible.builtin.hostname:
+    name: nsapoold05
