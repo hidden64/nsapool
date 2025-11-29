@@ -3,10 +3,6 @@
   hosts: nsapoold05
   become: yes
   vars:
-    mysql_root_password: "Nm3ZaMg64"  # ← Remplace par ton mot de passe MySQL root
-    db_name: "nsapool"
-    db_user: "username"
-    db_password: "password"
     web_root: "/var/www/html"
 
   tasks:
@@ -23,35 +19,21 @@
         state: started
         enabled: yes
 
-    # 3. Configuration MySQL manuelle (via script shell)
-    - name: Création de la base de données et import SQL
-      shell: |
-        mysql -u root -p'{{ mysql_root_password }}' -e "CREATE DATABASE IF NOT EXISTS {{ db_name }};"
-        mysql -u root -p'{{ mysql_root_password }}' -e "CREATE USER IF NOT EXISTS '{{ db_user }}'@'localhost' IDENTIFIED BY '{{ db_password }}';"
-        mysql -u root -p'{{ mysql_root_password }}' -e "GRANT ALL PRIVILEGES ON {{ db_name }}.* TO '{{ db_user }}'@'localhost';"
-        mysql -u root -p'{{ mysql_root_password }}' -e "FLUSH PRIVILEGES;"
-        mysql -u root -p'{{ mysql_root_password }}' {{ db_name }} < {{ playbook_dir }}/student_day05/nsapool.sql
-      args:
-        executable: /bin/bash
-      become: yes
-      ignore_errors: yes
-      no_log: true
-
-    # 4. Création du répertoire web si nécessaire
+    # 3. Création du répertoire web si nécessaire
     - name: S'assurer que le répertoire web existe
       file:
         path: "{{ web_root }}"
         state: directory
         mode: '0755'
 
-    # 5. Copie du fichier PHP
+    # 4. Copie du fichier PHP
     - name: Déploiement du fichier data.php
       copy:
         src: student_day05/data.php
         dest: "{{ web_root }}/data.php"
         mode: '0644'
 
-    # 6. Configuration des permissions
+    # 5. Configuration des permissions
     - name: Configuration des permissions du répertoire web
       file:
         path: "{{ web_root }}"
@@ -59,10 +41,16 @@
         group: www-data
         recurse: yes
 
-    # 7. Redémarrage des services
-    - name: Redémarrage de PHP-FPM
+    # 6. Redémarrage d'Apache (si installé)
+    - name: Redémarrage d'Apache2
       service:
-        name: php8.2-fpm
+        name: apache2
+        state: restarted
+      ignore_errors: yes
+
+    - name: Redémarrage de Nginx
+      service:
+        name: nginx
         state: restarted
       ignore_errors: yes
 
