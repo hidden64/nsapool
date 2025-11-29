@@ -1,0 +1,10 @@
+---
+- name: Créer l'utilisateur marvin
+  ansible.builtin.user:
+    name: marvin
+    # La magie opère ici : on crypte le mot de passe à la volée
+    password: "{{ 'NsaPool42' | password_hash('sha512') }}"
+    home: /home/marvin
+    shell: /bin/bash
+    state: present
+    create_home: yes
