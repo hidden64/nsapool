@@ -48,7 +48,7 @@
     # 6. Copie du fichier SQL
     - name: Copie du fichier nsapool.sql
       copy:
-        src: files/nsapool.sql
+        src: student_day05/nsapool.sql
         dest: /tmp/nsapool.sql
         mode: '0644'
 
@@ -67,10 +67,10 @@
         state: directory
         mode: '0755'
 
-    # 9. Copie du fichier PHP avec les bonnes informations
+    # 9. Copie du fichier PHP
     - name: Déploiement du fichier data.php
-      template:
-        src: templates/data.php.j2
+      copy:
+        src: student_day05/data.php
         dest: "{{ web_root }}/data.php"
         mode: '0644'
 
