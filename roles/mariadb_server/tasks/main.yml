@@ -1,0 +1,44 @@
+---
+# 1. Installation de MariaDB et du module Python nécessaire
+- name: Installer MariaDB et la librairie Python MySQL
+  ansible.builtin.apt:
+    name:
+      - mariadb-server
+      - python3-pymysql  # Indispensable pour qu'Ansible puisse parler à la DB
+    state: latest        # L'exercice demande la "latest version"
+    update_cache: yes
+
+# 2. Démarrage du service
+- name: Démarrer MariaDB
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: yes
+
+# 3. Création de la base de données vide
+- name: Créer la base de données 'nsapool'
+  community.mysql.mysql_db:
+    name: nsapool
+    state: present
+    login_user: root
+    login_password: "" # On suppose que root n'a pas de mot de passe en local
+
+# 4. Création de l'utilisateur SPÉCIAL demandé (nsad04)
+- name: Créer l'utilisateur 'nsad04' avec tous les droits
+  community.mysql.mysql_user:
+    name: nsad04
+    password: "E24h7U5kA9HJhq5VM98pm7p5zmJpf8AK" # Le mot de passe demandé
+    priv: "*.*:ALL"  # "All on all databases" (Tous les droits partout)
+    host: "%"        # Accessible depuis n'importe où (ou met 'localhost' si tu préfères)
+    state: present
+    login_user: root
+    login_password: ""
+
+# 5. Importation du fichier SQL
+- name: Importer le fichier nsapool.sql
+  community.mysql.mysql_db:
+    state: import
+    name: nsapool
+    target: "{{ role_path }}/files/nsapool.sql" # Ansible va chercher le fichier dans ton dossier 'files'
+    login_user: root
+    login_password: ""
