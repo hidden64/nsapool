@@ -1,0 +1,31 @@
+---
+# 1. On arrête Apache pour libérer le port 80
+- name: Arrêter et désactiver Apache2 (pour éviter les conflits)
+  ansible.builtin.service:
+    name: apache2
+    state: stopped
+    enabled: no
+  ignore_errors: yes # Au cas où Apache n'est pas installé, on continue
+
+# 2. On installe Nginx
+- name: Installer la dernière version de Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: latest
+    update_cache: yes
+
+# 3. On s'assure que Nginx est démarré
+- name: Démarrer et activer Nginx
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: yes
+
+# 4. On copie notre site web (le fichier de l'étape 2)
+- name: Copier le site web dans le dossier racine de Nginx
+  ansible.builtin.copy:
+    src: index.html       # Ansible cherche automatiquement dans le dossier 'files' du rôle
+    dest: /var/www/html/index.html
+    owner: www-data
+    group: www-data
+    mode: '0644'
